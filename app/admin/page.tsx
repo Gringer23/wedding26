@@ -2,6 +2,8 @@ import { prisma } from '@/src/shared/lib/prisma';
 import AdminGuests from '@/features/admin/AdminGuests';
 import AdminLogoutButton from '@/features/admin/AdminLogoutButton';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminPage() {
     const guests = await prisma.guest.findMany({
         include: {
@@ -11,6 +13,7 @@ export default async function AdminPage() {
             createdAt: 'desc',
         },
     });
+
 
     return (
         <main className="min-h-screen bg-[#f7f1eb] px-4 py-8 text-stone-900">

@@ -5,6 +5,8 @@ import BanquetMapBlock from "@/features/wedding/BanquetMapBlock";
 import DressCodeBlock from "@/features/wedding/DressCodeBlock";
 import Image from 'next/image';
 
+export const dynamic = 'force-dynamic';
+
 type Props = {
     params: Promise<{
         slug: string;
