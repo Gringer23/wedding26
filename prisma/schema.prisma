@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Guest {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  maxPeople Int      @default(1)
+
+  response  GuestResponse?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GuestResponse {
+  id Int @id @default(autoincrement())
+
+  guestId Int   @unique
+  guest   Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  status       AttendanceStatus
+  peopleCount  Int?
+  drinks       String?
+  comment      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum AttendanceStatus {
+  WILL_COME
+  WILL_NOT_COME
+}
