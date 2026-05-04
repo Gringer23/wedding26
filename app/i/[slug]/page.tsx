@@ -4,6 +4,7 @@ import GuestForm from '@/features/wedding/GuestForm';
 import BanquetMapBlock from "@/features/wedding/BanquetMapBlock";
 import DressCodeBlock from "@/features/wedding/DressCodeBlock";
 import Image from 'next/image';
+import Reveal from "@/src/shared/ui/Reveal";
 
 export const dynamic = 'force-dynamic';
 
@@ -34,54 +35,79 @@ export default async function InvitePage({ params }: Props) {
 
                 <div className="relative z-10 w-full max-w-4xl">
                     <div className="bg-white/70 backdrop-blur-md rounded-[40px] shadow-2xl border border-white px-6 py-10 md:px-16 md:py-14 text-center">
-                        <p className="text-sm uppercase tracking-[0.45em] text-stone-500 mb-8">
-                            Wedding day
-                        </p>
+                        <Reveal>
+                            <p className="text-sm uppercase tracking-[0.45em] text-stone-500 mb-8">
+                                Wedding day
+                            </p>
 
-                        <h1 className="font-serif text-5xl md:text-8xl mb-6">
-                            Александр <span className="text-stone-400">&</span> Дарья
-                        </h1>
+                            <h1 className="font-serif mb-6 whitespace-nowrap text-[36px] sm:text-6xl md:text-8xl">
+                                Александр <span className="text-stone-400">&</span> Дарья
+                            </h1>
 
-                        <p className="text-xl md:text-2xl mb-8 text-stone-600">
-                            28 августа 2026
-                        </p>
-                        <CoupleHeroPhoto />
-                        <div className="w-24 h-px bg-stone-300 mx-auto mb-8" />
+                            <p className="text-xl md:text-2xl mb-8 text-stone-600">
+                                28 августа 2026
+                            </p>
+                        </Reveal>
 
-                        <p className="text-2xl md:text-3xl font-serif mb-6">
-                            Дорогой гость, {guest.name}
-                        </p>
+                        <Reveal delay={0.1}>
+                            <CoupleHeroPhoto />
+                        </Reveal>
 
-                        <p className="max-w-2xl mx-auto text-stone-600 leading-8 mb-10">
-                            Мы с радостью приглашаем вас разделить с нами день нашей свадьбы.
-                            Для нас будет большой честью видеть вас рядом в этот особенный момент.
-                        </p>
+                        <Reveal delay={0.15}>
+                            <div className="w-24 h-px bg-stone-300 mx-auto mb-8" />
 
-                        <div className="grid gap-4 mb-12 text-left sm:grid-cols-2 lg:grid-cols-4">
-                            <InfoCard title="Дата" value="28.08.2026" />
-                            <InfoCard title="Время" value="16:00" />
-                            <InfoCard title="Место" value='Ресторан "Завидное"' />
-                            <InfoCard title="Дресс-код" value="Нежная палитра" />
-                        </div>
-                        <CoupleGallery />
-                        <BanquetMapBlock />
-                        <DressCodeBlock />
-                        <TelegramBlock />
-                        <GuestForm
-                            guestId={guest.id}
-                            guestName={guest.name}
-                            maxPeople={guest.maxPeople}
-                            initialResponse={
-                                guest.response
-                                    ? {
-                                        status: guest.response.status,
-                                        peopleCount: guest.response.peopleCount,
-                                        drinks: guest.response.drinks,
-                                        comment: guest.response.comment,
-                                    }
-                                    : null
-                            }
-                        />
+                            <p className="text-2xl md:text-3xl font-serif mb-6">
+                                {guest.name}
+                            </p>
+
+                            <p className="max-w-2xl mx-auto text-stone-600 leading-8 mb-10">
+                                От всей души приглашаем вас разделить с нами день нашей свадьбы.
+                                Для нас будет большой честью видеть вас рядом в этот особенный момент.
+                            </p>
+                        </Reveal>
+
+                        <Reveal delay={0.1}>
+                            <div className="grid gap-4 mb-12 text-left sm:grid-cols-2 lg:grid-cols-4">
+                                <InfoCard title="Дата" value="28.08.2026" />
+                                <InfoCard title="Время" value="16:00" />
+                                <InfoCard title="Место" value='Ресторан "Завидное"' />
+                                <InfoCard title="Дресс-код" value="Нежная палитра" />
+                            </div>
+                        </Reveal>
+
+                        <Reveal>
+                            <CoupleGallery />
+                        </Reveal>
+
+                        <Reveal>
+                            <BanquetMapBlock />
+                        </Reveal>
+
+                        <Reveal>
+                            <DressCodeBlock />
+                        </Reveal>
+
+                        <Reveal>
+                            <TelegramBlock />
+                        </Reveal>
+
+                        <Reveal>
+                            <GuestForm
+                                guestId={guest.id}
+                                guestName={guest.name}
+                                maxPeople={guest.maxPeople}
+                                initialResponse={
+                                    guest.response
+                                        ? {
+                                            status: guest.response.status,
+                                            peopleCount: guest.response.peopleCount,
+                                            drinks: guest.response.drinks,
+                                            comment: guest.response.comment,
+                                        }
+                                        : null
+                                }
+                            />
+                        </Reveal>
                     </div>
                 </div>
             </section>
@@ -202,23 +228,24 @@ function CoupleGallery() {
 
                 <div className="grid gap-4 md:grid-cols-3">
                     {photos.map((photo, index) => (
-                        <div
-                            key={photo.src}
-                            className={[
-                                'relative overflow-hidden rounded-[28px] bg-stone-100 shadow-sm',
-                                index === 1 ? 'md:-translate-y-4' : '',
-                            ].join(' ')}
-                        >
-                            <div className="relative aspect-[3/4] w-full">
-                                <Image
-                                    src={photo.src}
-                                    alt={photo.alt}
-                                    fill
-                                    className="object-cover transition duration-500 hover:scale-105"
-                                    sizes="(max-width: 768px) 100vw, 260px"
-                                />
+                        <Reveal key={photo.src} delay={index * 0.12}>
+                            <div
+                                className={[
+                                    'relative overflow-hidden rounded-[28px] bg-stone-100 shadow-sm',
+                                    index === 1 ? 'md:-translate-y-4' : '',
+                                ].join(' ')}
+                            >
+                                <div className="relative aspect-[3/4] w-full">
+                                    <Image
+                                        src={photo.src}
+                                        alt={photo.alt}
+                                        fill
+                                        className="object-cover transition duration-500 hover:scale-105"
+                                        sizes="(max-width: 768px) 100vw, 260px"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        </Reveal>
                     ))}
                 </div>
             </div>

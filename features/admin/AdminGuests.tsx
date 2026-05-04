@@ -270,7 +270,7 @@ export default function AdminGuests({ guests }: Props) {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full min-w-[900px] text-left">
+                    <table className="w-full min-w-[1100px] text-left">
                         <thead>
                         <tr className="border-b border-stone-100 text-sm text-stone-500">
                             <th className="py-4 pr-4 font-medium">Гость</th>
@@ -279,6 +279,7 @@ export default function AdminGuests({ guests }: Props) {
                             <th className="py-4 pr-4 font-medium">Статус</th>
                             <th className="py-4 pr-4 font-medium">Ответ</th>
                             <th className="py-4 pr-4 font-medium">Напитки</th>
+                            <th className="py-4 pr-4 font-medium">Комментарий</th>
                             <th className="py-4 pr-4 font-medium">Действия</th>
                         </tr>
                         </thead>
@@ -329,7 +330,18 @@ export default function AdminGuests({ guests }: Props) {
                                     <td className="py-4 pr-4 text-stone-700">
                                         {drinks.length ? drinks.join(', ') : '-'}
                                     </td>
-
+                                    <td className="py-4 pr-4 text-stone-700">
+                                        {guest.response?.comment ? (
+                                            <p
+                                                title={guest.response.comment}
+                                                className="max-w-[260px] truncate text-sm"
+                                            >
+                                                {guest.response.comment}
+                                            </p>
+                                        ) : (
+                                            '-'
+                                        )}
+                                    </td>
                                     <td className="py-4 pr-4">
                                         <div className="flex gap-2">
                                             <button
@@ -358,7 +370,7 @@ export default function AdminGuests({ guests }: Props) {
                         {!filteredGuests.length && (
                             <tr>
                                 <td
-                                    colSpan={7}
+                                    colSpan={8}
                                     className="py-10 text-center text-stone-500"
                                 >
                                     Гости не найдены

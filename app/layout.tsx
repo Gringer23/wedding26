@@ -15,6 +15,7 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: 'Приглашение на свадьбу',
   description: 'Александр и Дарья — 28.08.2026',
+    icons: '/favicon.ico',
 };
 
 export default function RootLayout({
