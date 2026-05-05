@@ -1,6 +1,7 @@
 import { prisma } from '@/src/shared/lib/prisma';
 import AdminGuests from '@/features/admin/AdminGuests';
 import AdminLogoutButton from '@/features/admin/AdminLogoutButton';
+import AdminSeating from "@/features/admin/AdminSeating";
 
 export const dynamic = 'force-dynamic';
 
@@ -8,9 +9,28 @@ export default async function AdminPage() {
     const guests = await prisma.guest.findMany({
         include: {
             response: true,
+            seatingAssignment: true,
         },
         orderBy: {
             createdAt: 'desc',
+        },
+    });
+
+    const tables = await prisma.seatingTable.findMany({
+        include: {
+            assignments: {
+                include: {
+                    guest: true,
+                },
+                orderBy: {
+                    guest: {
+                        name: 'asc',
+                    },
+                },
+            },
+        },
+        orderBy: {
+            id: 'asc',
         },
     });
 
@@ -38,6 +58,10 @@ export default async function AdminPage() {
                 </div>
 
                 <AdminGuests guests={guests} />
+
+                <div className="mt-8">
+                    <AdminSeating guests={guests} tables={tables} />
+                </div>
             </div>
         </main>
     );

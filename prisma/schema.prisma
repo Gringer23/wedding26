@@ -16,6 +16,7 @@ model Guest {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  seatingAssignment SeatingAssignment?
 }
 
 model GuestResponse {
@@ -36,4 +37,39 @@ model GuestResponse {
 enum AttendanceStatus {
   WILL_COME
   WILL_NOT_COME
+}
+
+enum SeatingTableType {
+  ROUND
+  PRESIDIUM
+}
+
+model SeatingTable {
+  id        Int              @id @default(autoincrement())
+  name      String
+  type      SeatingTableType @default(ROUND)
+  seats     Int              @default(8)
+  positionX Int              @default(50)
+  positionY Int              @default(50)
+
+  assignments SeatingAssignment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SeatingAssignment {
+  id Int @id @default(autoincrement())
+
+  tableId Int
+  table   SeatingTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+
+  guestId Int @unique
+  guest   Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  peopleCount Int @default(1)
+  seatStart   Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -5,6 +5,7 @@ import BanquetMapBlock from "@/features/wedding/BanquetMapBlock";
 import DressCodeBlock from "@/features/wedding/DressCodeBlock";
 import Image from 'next/image';
 import Reveal from "@/src/shared/ui/Reveal";
+import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
@@ -90,7 +91,9 @@ export default async function InvitePage({ params }: Props) {
                         <Reveal>
                             <TelegramBlock />
                         </Reveal>
-
+                        <Reveal>
+                            <SeatingPlanButton slug={guest.slug} />
+                        </Reveal>
                         <Reveal>
                             <GuestForm
                                 guestId={guest.id}
@@ -250,5 +253,31 @@ function CoupleGallery() {
                 </div>
             </div>
         </section>
+    );
+}
+
+function SeatingPlanButton({ slug }: { slug: string }) {
+    return (
+        <div className="mx-auto mb-12 max-w-2xl rounded-[28px] border border-stone-100 bg-white/80 p-6 text-center shadow-sm">
+            <p className="mb-2 text-sm uppercase tracking-[0.3em] text-stone-400">
+                Seating plan
+            </p>
+
+            <h2 className="mb-3 font-serif text-3xl text-stone-800">
+                План рассадки гостей
+            </h2>
+
+            <p className="mx-auto mb-6 max-w-xl leading-7 text-stone-600">
+                Мы подготовили схему рассадки, чтобы вам было легко найти свой стол
+                в день торжества.
+            </p>
+
+            <Link
+                href={`/i/${slug}/seating`}
+                className="inline-flex items-center justify-center rounded-full bg-stone-900 px-7 py-3 text-white transition hover:bg-stone-700"
+            >
+                Посмотреть рассадку
+            </Link>
+        </div>
     );
 }
