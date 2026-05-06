@@ -49,8 +49,8 @@ model SeatingTable {
   name      String
   type      SeatingTableType @default(ROUND)
   seats     Int              @default(8)
-  positionX Int              @default(50)
-  positionY Int              @default(50)
+  positionX Int @default(500)
+  positionY Int @default(500)
 
   assignments SeatingAssignment[]
 

@@ -45,15 +45,15 @@ export default function AdminSeating({ guests, tables }: Props) {
     const [peopleCount, setPeopleCount] = useState(1);
 
     const [tableType, setTableType] = useState<'ROUND' | 'PRESIDIUM'>('ROUND');
-    const [positionX, setPositionX] = useState(50);
-    const [positionY, setPositionY] = useState(50);
+    const [positionX, setPositionX] = useState(500);
+    const [positionY, setPositionY] = useState(500);
 
     const [editingTableId, setEditingTableId] = useState<number | null>(null);
     const [editTableName, setEditTableName] = useState('');
     const [editTableType, setEditTableType] = useState<'ROUND' | 'PRESIDIUM'>('ROUND');
     const [editSeats, setEditSeats] = useState(8);
-    const [editPositionX, setEditPositionX] = useState(50);
-    const [editPositionY, setEditPositionY] = useState(50);
+    const [editPositionX, setEditPositionX] = useState(500);
+    const [editPositionY, setEditPositionY] = useState(500);
 
     const createTable = async () => {
         if (!tableName.trim()) return;
@@ -80,8 +80,8 @@ export default function AdminSeating({ guests, tables }: Props) {
         setTableName('');
         setTableType('ROUND');
         setSeats(8);
-        setPositionX(50);
-        setPositionY(50);
+        setPositionX(500);
+        setPositionY(500);
 
         router.refresh();
     };
@@ -100,8 +100,8 @@ export default function AdminSeating({ guests, tables }: Props) {
         setEditTableName('');
         setEditTableType('ROUND');
         setEditSeats(8);
-        setEditPositionX(50);
-        setEditPositionY(50);
+        setEditPositionX(500);
+        setEditPositionY(500);
     };
 
     const updateTable = async () => {
@@ -267,7 +267,7 @@ export default function AdminSeating({ guests, tables }: Props) {
                         <input
                             type="number"
                             min={0}
-                            max={100}
+                            max={1000}
                             value={positionX}
                             onChange={event => setPositionX(Number(event.target.value))}
                             className="w-full rounded-2xl border border-stone-200 px-4 py-3 text-center outline-none focus:border-stone-700"
@@ -281,7 +281,7 @@ export default function AdminSeating({ guests, tables }: Props) {
                         <input
                             type="number"
                             min={0}
-                            max={100}
+                            max={1000}
                             value={positionY}
                             onChange={event => setPositionY(Number(event.target.value))}
                             className="w-full rounded-2xl border border-stone-200 px-4 py-3 text-center outline-none focus:border-stone-700"
@@ -384,8 +384,8 @@ export default function AdminSeating({ guests, tables }: Props) {
                     Как работают координаты:
                 </p>
                 <p>
-                    X — положение по горизонтали от 0 до 100. Y — положение по вертикали от 0 до 100.
-                    Например, президиум удобно ставить X=50, Y=18. Центральный стол — X=50, Y=50.
+                    X — положение по горизонтали от 0 до 1000. Y — положение по вертикали от 0 до 1000.
+                    Например, президиум удобно ставить X=500, Y=120. Центральный стол — X=500, Y=500.
                 </p>
             </div>
             <div className="grid gap-5 lg:grid-cols-2">
@@ -453,7 +453,7 @@ export default function AdminSeating({ guests, tables }: Props) {
                                             <input
                                                 type="number"
                                                 min={0}
-                                                max={100}
+                                                max={1000}
                                                 value={editPositionX}
                                                 onChange={event => setEditPositionX(Number(event.target.value))}
                                                 className="w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-stone-700"
@@ -467,7 +467,7 @@ export default function AdminSeating({ guests, tables }: Props) {
                                             <input
                                                 type="number"
                                                 min={0}
-                                                max={100}
+                                                max={1000}
                                                 value={editPositionY}
                                                 onChange={event => setEditPositionY(Number(event.target.value))}
                                                 className="w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-stone-700"

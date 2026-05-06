@@ -7,8 +7,8 @@ const createTableSchema = z.object({
     name: z.string().min(1),
     type: z.enum(['ROUND', 'PRESIDIUM']),
     seats: z.coerce.number().min(1).max(50),
-    positionX: z.coerce.number().min(0).max(100),
-    positionY: z.coerce.number().min(0).max(100),
+    positionX: z.coerce.number().min(0).max(1000),
+    positionY: z.coerce.number().min(0).max(1000),
 });
 
 const updateTableSchema = z.object({
@@ -16,8 +16,8 @@ const updateTableSchema = z.object({
     name: z.string().min(1),
     type: z.enum(['ROUND', 'PRESIDIUM']),
     seats: z.coerce.number().min(1).max(50),
-    positionX: z.coerce.number().min(0).max(100),
-    positionY: z.coerce.number().min(0).max(100),
+    positionX: z.coerce.number().min(0).max(1000),
+    positionY: z.coerce.number().min(0).max(1000),
 });
 
 const deleteTableSchema = z.object({

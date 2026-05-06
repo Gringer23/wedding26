@@ -1,5 +1,7 @@
 'use client';
 
+import {TransformComponent, TransformWrapper} from "react-zoom-pan-pinch";
+
 type Guest = {
     id: number;
     name: string;
@@ -71,34 +73,93 @@ export default function SeatingPlanView({ tables, activeGuestId }: Props) {
                     <Legend colorClass="bg-amber-500" label="Ваше место" />
                 </div>
 
-                <div className="overflow-x-auto">
-                    <div className="mx-auto min-w-[1100px]">
-                        <div className="relative h-[780px] rounded-[36px] border border-stone-100 bg-[#f9f4ee] p-6">
-                            <div className="pointer-events-none absolute inset-x-10 top-6 rounded-2xl border border-dashed border-stone-200 py-3 text-center text-sm uppercase tracking-[0.3em] text-stone-400">
-                                Сцена / президиум
+                <TransformWrapper
+                    initialScale={0.45}
+                    minScale={0.2}
+                    maxScale={1.2}
+                    centerOnInit
+                    centerZoomedOut
+                    wheel={{
+                        step: 0.01,
+                    }}
+                    pinch={{
+                        step: 5,
+                    }}
+                    doubleClick={{
+                        disabled: true,
+                    }}
+                    panning={{
+                        velocityDisabled: true,
+                    }}
+                >
+                    {({ zoomIn, zoomOut, resetTransform }) => (
+                        <div className="rounded-[32px] border border-stone-100 bg-white/70 p-3 shadow-inner">
+                            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-sm text-stone-500">
+                                    Масштабируйте схему колесиком мыши или жестом на телефоне.
+                                </p>
+
+                                <div className="flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => zoomOut()}
+                                        className="rounded-full bg-white px-4 py-2 text-sm text-stone-700 shadow-sm transition hover:bg-stone-50"
+                                    >
+                                        −
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => resetTransform()}
+                                        className="rounded-full bg-white px-4 py-2 text-sm text-stone-700 shadow-sm transition hover:bg-stone-50"
+                                    >
+                                        100%
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => zoomIn()}
+                                        className="rounded-full bg-white px-4 py-2 text-sm text-stone-700 shadow-sm transition hover:bg-stone-50"
+                                    >
+                                        +
+                                    </button>
+                                </div>
                             </div>
 
-                            {tables.map(table => (
-                                <TableNode
-                                    key={table.id}
-                                    table={table}
-                                    activeGuestId={activeGuestId}
-                                />
-                            ))}
+                            <div className="h-[620px] overflow-hidden rounded-[28px] border border-stone-100 bg-[#f9f4ee] md:h-[780px]">
+                                <TransformComponent
+                                    wrapperClass="!h-full !w-full"
+                                    contentClass="!h-[1000px] !w-[1000px]"
+                                >
+                                    <div className="relative h-[1000px] w-[1000px] rounded-[28px] bg-[#f9f4ee] p-6">
+                                        <div className="pointer-events-none absolute left-[120px] right-[120px] top-6 rounded-2xl border-2 border-dashed border-stone-200 py-3 text-center text-sm uppercase tracking-[0.3em] text-stone-400">
+                                            Сцена
+                                        </div>
+
+                                        {tables.map(table => (
+                                            <TableNode
+                                                key={table.id}
+                                                table={table}
+                                                activeGuestId={activeGuestId}
+                                            />
+                                        ))}
+                                    </div>
+                                </TransformComponent>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    )}
+                </TransformWrapper>
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-2">
-                {tables.map(table => (
-                    <TableInfoCard
-                        key={table.id}
-                        table={table}
-                        activeGuestId={activeGuestId}
-                    />
-                ))}
-            </div>
+            {/*<div className="grid gap-5 lg:grid-cols-2">*/}
+            {/*    {tables.map(table => (*/}
+            {/*        <TableInfoCard*/}
+            {/*            key={table.id}*/}
+            {/*            table={table}*/}
+            {/*            activeGuestId={activeGuestId}*/}
+            {/*        />*/}
+            {/*    ))}*/}
+            {/*</div>*/}
         </section>
     );
 }
@@ -117,8 +178,8 @@ function TableNode({
         <div
             className="absolute -translate-x-1/2 -translate-y-1/2"
             style={{
-                left: `${table.positionX}%`,
-                top: `${table.positionY}%`,
+                left: `${table.positionX}px`,
+                top: `${table.positionY}px`,
             }}
         >
             {table.type === 'PRESIDIUM' ? (
@@ -266,7 +327,12 @@ function PresidiumTable({
     const seatDotRadius = 9;
 
     const occupiedSeats = seatMap.filter(item => item.assignment).length;
-    const positions = getRectSeatPositions(seatMap.length, width, height, 30);
+    const positions = getPresidiumSeatPositions(
+        seatMap.length,
+        width,
+        rectY,
+        rectHeight,
+    );
 
     return (
         <div className="relative">
@@ -480,51 +546,22 @@ function buildSeatMap(
     return result;
 }
 
-function getRectSeatPositions(
+
+function getPresidiumSeatPositions(
     total: number,
     width: number,
-    height: number,
-    padding = 24,
+    rectY: number,
+    rectHeight: number,
 ) {
-    const x1 = padding;
-    const y1 = padding;
-    const x2 = width - padding;
-    const y2 = height - padding;
+    const gap = 28;
+    const totalWidth = (total - 1) * gap;
+    const startX = width / 2 - totalWidth / 2;
+    const y = rectY + rectHeight + 28;
 
-    const topLength = x2 - x1;
-    const rightLength = y2 - y1;
-    const bottomLength = x2 - x1;
-    const leftLength = y2 - y1;
-
-    const perimeter =
-        topLength + rightLength + bottomLength + leftLength;
-
-    return Array.from({ length: total }, (_, index) => {
-        const distance = (index / total) * perimeter;
-
-        if (distance <= topLength) {
-            return { x: x1 + distance, y: y1 };
-        }
-
-        if (distance <= topLength + rightLength) {
-            return {
-                x: x2,
-                y: y1 + (distance - topLength),
-            };
-        }
-
-        if (distance <= topLength + rightLength + bottomLength) {
-            return {
-                x: x2 - (distance - topLength - rightLength),
-                y: y2,
-            };
-        }
-
-        return {
-            x: x1,
-            y: y2 - (distance - topLength - rightLength - bottomLength),
-        };
-    });
+    return Array.from({ length: total }, (_, index) => ({
+        x: startX + index * gap,
+        y,
+    }));
 }
 
 function Legend({
