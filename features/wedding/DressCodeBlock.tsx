@@ -4,12 +4,8 @@ const dressCodeColors = [
         value: '#D8A7A7',
     },
     {
-        name: 'Шампань',
-        value: '#EADBC8',
-    },
-    {
-        name: 'Молочный',
-        value: '#F7F1E8',
+        name: 'Ванильный',
+        value: '#F3E3A3',
     },
     {
         name: 'Оливковый',
@@ -18,6 +14,18 @@ const dressCodeColors = [
     {
         name: 'Какао',
         value: '#8A6F5A',
+    },
+    {
+        name: 'Тёмно-синий',
+        value: '#1F2A44',
+    },
+    {
+        name: 'Пыльно-голубой',
+        value: '#9BAFC3',
+    },
+    {
+        name: 'Шалфей',
+        value: '#A8B59C',
     },
 ];
 

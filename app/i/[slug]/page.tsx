@@ -92,6 +92,9 @@ export default async function InvitePage({ params }: Props) {
                             <TelegramBlock />
                         </Reveal>
                         <Reveal>
+                            <MaxBlock />
+                        </Reveal>
+                        <Reveal>
                             <SeatingPlanButton slug={guest.slug} />
                         </Reveal>
                         <Reveal>
@@ -167,6 +170,44 @@ function TelegramBlock() {
     );
 }
 
+function MaxBlock() {
+    const maxUrl = process.env.NEXT_PUBLIC_MAX_GROUP_URL;
+
+    if (!maxUrl) {
+        return null;
+    }
+
+    return (
+        <div className="mx-auto mb-12 max-w-2xl rounded-[28px] border border-[#D8E7FF] bg-gradient-to-br from-[#F4F8FF] via-[#EEF6FF] to-[#E8F2FF] p-6 text-left shadow-sm">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p className="mb-2 text-sm uppercase tracking-[0.25em] text-[#3367D6]">
+                        MAX
+                    </p>
+
+                    <h2 className="mb-2 font-serif text-3xl text-stone-800">
+                        Присоединяйтесь к группе гостей
+                    </h2>
+
+                    <p className="text-stone-600 leading-7">
+                        В MAX-группе мы будем делиться важной информацией:
+                        таймингом, адресом, деталями трансфера и фотографиями после свадьбы.
+                    </p>
+                </div>
+
+                <a
+                    href={maxUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex shrink-0 items-center justify-center rounded-full bg-[#3367D6] px-6 py-3 text-white shadow-sm transition hover:bg-[#2A56B3]"
+                >
+                    Вступить
+                </a>
+            </div>
+        </div>
+    );
+}
+
 function CoupleHeroPhoto() {
     return (
         <div className="mx-auto mb-10 max-w-2xl">
@@ -184,9 +225,6 @@ function CoupleHeroPhoto() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent" />
 
                     <div className="absolute bottom-5 left-5 right-5 text-left text-white">
-                        <p className="text-sm uppercase tracking-[0.3em] opacity-90">
-                            Our story
-                        </p>
                         <p className="mt-2 font-serif text-3xl md:text-4xl">
                             Скоро станем семьёй
                         </p>
@@ -245,6 +283,7 @@ function CoupleGallery() {
                                         fill
                                         className="object-cover transition duration-500 hover:scale-105"
                                         sizes="(max-width: 768px) 100vw, 260px"
+                                        loading="eager"
                                     />
                                 </div>
                             </div>
