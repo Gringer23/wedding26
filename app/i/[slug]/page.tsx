@@ -89,6 +89,10 @@ export default async function InvitePage({ params }: Props) {
                         </Reveal>
 
                         <Reveal>
+                            <GiftBlock />
+                        </Reveal>
+
+                        <Reveal>
                             <TelegramBlock />
                         </Reveal>
                         <Reveal>
@@ -317,6 +321,41 @@ function SeatingPlanButton({ slug }: { slug: string }) {
             >
                 Посмотреть рассадку
             </Link>
+        </div>
+    );
+}
+
+function GiftBlock() {
+    return (
+        <div className="mx-auto mb-12 max-w-2xl rounded-[28px] border border-amber-100 bg-gradient-to-br from-[#fffaf0] via-[#fff7e8] to-[#f7eee7] p-6 text-left shadow-sm">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p className="mb-2 text-sm uppercase tracking-[0.25em] text-amber-600">
+                        Gifts
+                    </p>
+
+                    <h2 className="mb-2 font-serif text-3xl text-stone-800">
+                        О подарках
+                    </h2>
+
+                    <p className="text-stone-600 leading-7">
+                        Ваше присутствие на нашем празднике — уже большая радость
+                        для нас. Если вы захотите порадовать нас подарком, мы будем
+                        благодарны за то, что пригодится в семейной жизни: технику,
+                        полезные вещи для дома или вклад в наш семейный бюджет.
+                    </p>
+
+                    <p className="mt-4 text-stone-600 leading-7">
+                        Чтобы нам было проще осуществить общие мечты и обустроить
+                        наш будущий быт, самым универсальным и желанным вариантом
+                        станет подарок в денежном эквиваленте.
+                    </p>
+                </div>
+
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-amber-100 text-3xl">
+                    🎁
+                </div>
+            </div>
         </div>
     );
 }
