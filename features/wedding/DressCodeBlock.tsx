@@ -16,6 +16,10 @@ const dressCodeColors = [
         value: '#8A6F5A',
     },
     {
+        name: 'Шоколадный',
+        value: '#5A3526',
+    },
+    {
         name: 'Тёмно-синий',
         value: '#1F2A44',
     },
@@ -26,6 +30,10 @@ const dressCodeColors = [
     {
         name: 'Шалфей',
         value: '#A8B59C',
+    },
+    {
+        name: 'Виноградный',
+        value: '#5B3A70',
     },
 ];
 
