@@ -106,7 +106,7 @@ export default function DressCodeBlock() {
 
                 <div className="mt-8 rounded-[24px] border border-stone-100 bg-white p-5">
                     <p className="leading-7 text-stone-600">
-                        Главное — чтобы вам было комфортно. Дресс-код не строгий, но единая
+                        Главное - чтобы вам было комфортно. Дресс-код не строгий, но единая
                         палитра поможет сделать фотографии особенно красивыми и атмосферными.
                     </p>
                 </div>
