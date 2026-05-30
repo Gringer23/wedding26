@@ -259,16 +259,7 @@ function CoupleGallery() {
         <section className="mx-auto mb-12 max-w-3xl text-left">
             <div className="rounded-[32px] border border-stone-100 bg-white/80 p-6 shadow-sm md:p-8">
                 <p className="mb-3 text-sm uppercase tracking-[0.3em] text-stone-400">
-                    Moments
-                </p>
-
-                <h2 className="mb-4 font-serif text-3xl text-stone-800 md:text-4xl">
-                    Немного наших моментов
-                </h2>
-
-                <p className="mb-6 text-lg leading-8 text-stone-600">
-                    Мы оставили здесь место для нескольких любимых фотографий,
-                    чтобы приглашение стало ещё более личным и тёплым.
+                    Photos
                 </p>
 
                 <div className="grid gap-4 md:grid-cols-3">

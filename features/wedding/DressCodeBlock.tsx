@@ -35,6 +35,10 @@ const dressCodeColors = [
         name: 'Виноградный',
         value: '#5B3A70',
     },
+    {
+        name: 'Лавандовый',
+        value: '#C8B7D8',
+    },
 ];
 
 export default function DressCodeBlock() {
