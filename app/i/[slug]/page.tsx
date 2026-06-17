@@ -57,8 +57,8 @@ export default async function InvitePage({ params }: Props) {
                         <Reveal delay={0.15}>
                             <div className="w-24 h-px bg-stone-300 mx-auto mb-8" />
 
-                            <p className="text-2xl md:text-3xl font-serif mb-6">
-                                {guest.name}
+                            <p className="text-3xl md:text-4xl font-serif font-semibold mb-6">
+                                {guest.name}!
                             </p>
 
                             <p className="max-w-2xl mx-auto text-stone-600 leading-8 mb-10">
