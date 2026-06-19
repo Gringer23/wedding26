@@ -110,7 +110,11 @@ export default function AdminGuests({ guests }: Props) {
             });
 
             if (!response.ok) {
-                throw new Error('Не удалось создать гостя');
+                const errorData = await response.json().catch(() => null);
+
+                throw new Error(
+                    errorData?.message ?? 'Не удалось создать гостя',
+                );
             }
 
             const guest = (await response.json()) as Guest;

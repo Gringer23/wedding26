@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
-import { prisma } from '@/src/shared/lib/prisma';
 import GuestForm from '@/features/wedding/GuestForm';
-import BanquetMapBlock from "@/features/wedding/BanquetMapBlock";
-import DressCodeBlock from "@/features/wedding/DressCodeBlock";
+import BanquetMapBlock from '@/features/wedding/BanquetMapBlock';
+import DressCodeBlock from '@/features/wedding/DressCodeBlock';
 import Image from 'next/image';
-import Reveal from "@/src/shared/ui/Reveal";
-import Link from "next/link";
+import Reveal from '@/src/shared/ui/Reveal';
+import Link from 'next/link';
+import { supabaseAdmin } from '@/src/shared/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,16 +18,30 @@ type Props = {
 export default async function InvitePage({ params }: Props) {
     const { slug } = await params;
 
-    const guest = await prisma.guest.findUnique({
-        where: { slug },
-        include: {
-            response: true,
-        },
-    });
+    const { data: guest, error: guestError } = await supabaseAdmin
+        .from('Guest')
+        .select('*')
+        .eq('slug', slug)
+        .single();
 
-    if (!guest) {
+    if (guestError || !guest) {
         notFound();
     }
+
+    const { data: response, error: responseError } = await supabaseAdmin
+        .from('GuestResponse')
+        .select('*')
+        .eq('guestId', guest.id)
+        .maybeSingle();
+
+    if (responseError) {
+        console.error(responseError);
+    }
+
+    const guestWithResponse = {
+        ...guest,
+        response: response ?? null,
+    };
 
     return (
         <main className="min-h-screen bg-[#f7eee7] text-stone-800">
@@ -58,7 +72,7 @@ export default async function InvitePage({ params }: Props) {
                             <div className="w-24 h-px bg-stone-300 mx-auto mb-8" />
 
                             <p className="text-3xl md:text-4xl font-serif font-semibold mb-6">
-                                {guest.name}!
+                                {guestWithResponse.name}!
                             </p>
 
                             <p className="max-w-2xl mx-auto text-stone-600 leading-8 mb-10">
@@ -95,24 +109,27 @@ export default async function InvitePage({ params }: Props) {
                         <Reveal>
                             <TelegramBlock />
                         </Reveal>
+
                         <Reveal>
                             <MaxBlock />
                         </Reveal>
+
                         <Reveal>
-                            <SeatingPlanButton slug={guest.slug} />
+                            <SeatingPlanButton slug={guestWithResponse.slug} />
                         </Reveal>
+
                         <Reveal>
                             <GuestForm
-                                guestId={guest.id}
-                                guestName={guest.name}
-                                maxPeople={guest.maxPeople}
+                                guestId={guestWithResponse.id}
+                                guestName={guestWithResponse.name}
+                                maxPeople={guestWithResponse.maxPeople}
                                 initialResponse={
-                                    guest.response
+                                    guestWithResponse.response
                                         ? {
-                                            status: guest.response.status,
-                                            peopleCount: guest.response.peopleCount,
-                                            drinks: guest.response.drinks,
-                                            comment: guest.response.comment,
+                                            status: guestWithResponse.response.status,
+                                            peopleCount: guestWithResponse.response.peopleCount,
+                                            drinks: guestWithResponse.response.drinks ?? [],
+                                            comment: guestWithResponse.response.comment,
                                         }
                                         : null
                                 }

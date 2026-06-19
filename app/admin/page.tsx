@@ -1,39 +1,83 @@
-import { prisma } from '@/src/shared/lib/prisma';
 import AdminGuests from '@/features/admin/AdminGuests';
 import AdminLogoutButton from '@/features/admin/AdminLogoutButton';
-import AdminSeating from "@/features/admin/AdminSeating";
+import AdminSeating from '@/features/admin/AdminSeating';
+import { supabaseAdmin } from '@/src/shared/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
-    const guests = await prisma.guest.findMany({
-        include: {
-            response: true,
-            seatingAssignment: true,
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-    });
+    const { data: guestsData, error: guestsError } = await supabaseAdmin
+        .from('Guest')
+        .select('*')
+        .order('createdAt', { ascending: false });
 
-    const tables = await prisma.seatingTable.findMany({
-        include: {
-            assignments: {
-                include: {
-                    guest: true,
-                },
-                orderBy: {
-                    guest: {
-                        name: 'asc',
-                    },
-                },
-            },
-        },
-        orderBy: {
-            id: 'asc',
-        },
-    });
+    if (guestsError) {
+        console.error(guestsError);
+    }
 
+    const guests = await Promise.all(
+        (guestsData ?? []).map(async guest => {
+            const { data: response, error: responseError } = await supabaseAdmin
+                .from('GuestResponse')
+                .select('*')
+                .eq('guestId', guest.id)
+                .maybeSingle();
+
+            if (responseError) {
+                console.error(responseError);
+            }
+
+            const { data: seatingAssignment, error: assignmentError } =
+                await supabaseAdmin
+                    .from('SeatingAssignment')
+                    .select('*')
+                    .eq('guestId', guest.id)
+                    .maybeSingle();
+
+            if (assignmentError) {
+                console.error(assignmentError);
+            }
+
+            return {
+                ...guest,
+                response: response ?? null,
+                seatingAssignment: seatingAssignment ?? null,
+            };
+        }),
+    );
+
+    const { data: tablesData, error: tablesError } = await supabaseAdmin
+        .from('SeatingTable')
+        .select('*')
+        .order('id', { ascending: true });
+
+    if (tablesError) {
+        console.error(tablesError);
+    }
+
+    const tables = await Promise.all(
+        (tablesData ?? []).map(async table => {
+            const { data: assignments, error: assignmentsError } =
+                await supabaseAdmin
+                    .from('SeatingAssignment')
+                    .select('*, guest:Guest(*)')
+                    .eq('tableId', table.id);
+
+            if (assignmentsError) {
+                console.error(assignmentsError);
+            }
+
+            return {
+                ...table,
+                assignments: (assignments ?? []).sort((a, b) =>
+                    String(a.guest?.name ?? '').localeCompare(
+                        String(b.guest?.name ?? ''),
+                        'ru',
+                    ),
+                ),
+            };
+        }),
+    );
 
     return (
         <main className="min-h-screen bg-[#f7f1eb] px-4 py-8 text-stone-900">

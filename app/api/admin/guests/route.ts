@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { prisma } from '@/src/shared/lib/prisma';
+import { supabaseAdmin } from '@/src/shared/lib/supabaseAdmin';
 
 const createGuestSchema = z.object({
     name: z.string().min(2, 'Введите имя гостя'),
     maxPeople: z.coerce.number().min(1).max(20),
+});
+
+const deleteGuestSchema = z.object({
+    guestId: z.number(),
 });
 
 function slugify(value: string) {
@@ -60,12 +64,17 @@ async function generateUniqueSlug(name: string) {
     let counter = 1;
 
     while (true) {
-        const existingGuest = await prisma.guest.findUnique({
-            where: { slug },
-            select: { id: true },
-        });
+        const { data, error } = await supabaseAdmin
+            .from('Guest')
+            .select('id')
+            .eq('slug', slug)
+            .maybeSingle();
 
-        if (!existingGuest) {
+        if (error) {
+            throw error;
+        }
+
+        if (!data) {
             return slug;
         }
 
@@ -75,16 +84,45 @@ async function generateUniqueSlug(name: string) {
 }
 
 export async function GET() {
-    const guests = await prisma.guest.findMany({
-        include: {
-            response: true,
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-    });
+    try {
+        const { data: guests, error: guestsError } = await supabaseAdmin
+            .from('Guest')
+            .select('*')
+            .order('createdAt', { ascending: false });
 
-    return NextResponse.json(guests);
+        if (guestsError) {
+            throw guestsError;
+        }
+
+        const guestIds = guests.map(guest => guest.id);
+
+        const { data: responses, error: responsesError } = await supabaseAdmin
+            .from('GuestResponse')
+            .select('*')
+            .in('guestId', guestIds.length ? guestIds : [-1]);
+
+        if (responsesError) {
+            throw responsesError;
+        }
+
+        const responsesByGuestId = new Map(
+            responses.map(response => [response.guestId, response]),
+        );
+
+        const result = guests.map(guest => ({
+            ...guest,
+            response: responsesByGuestId.get(guest.id) ?? null,
+        }));
+
+        return NextResponse.json(result);
+    } catch (error) {
+        console.error(error);
+
+        return NextResponse.json(
+            { message: 'Не удалось получить гостей' },
+            { status: 400 },
+        );
+    }
 }
 
 export async function POST(request: Request) {
@@ -94,20 +132,37 @@ export async function POST(request: Request) {
 
         const slug = await generateUniqueSlug(data.name);
 
-        const guest = await prisma.guest.create({
-            data: {
+        const { data: guest, error } = await supabaseAdmin
+            .from('Guest')
+            .insert({
                 name: data.name,
                 slug,
                 maxPeople: data.maxPeople,
-            },
-            include: {
-                response: true,
-            },
-        });
+            })
+            .select('*')
+            .single();
 
-        return NextResponse.json(guest);
+        if (error) {
+            throw error;
+        }
+
+        return NextResponse.json({
+            ...guest,
+            response: null,
+        });
     } catch (error) {
         console.error(error);
+
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                {
+                    message: error.issues
+                        .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+                        .join('; '),
+                },
+                { status: 400 },
+            );
+        }
 
         return NextResponse.json(
             { message: 'Не удалось создать гостя' },
@@ -119,22 +174,31 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
     try {
         const body = await request.json();
+        const data = deleteGuestSchema.parse(body);
 
-        const schema = z.object({
-            guestId: z.number(),
-        });
+        const { error } = await supabaseAdmin
+            .from('Guest')
+            .delete()
+            .eq('id', data.guestId);
 
-        const data = schema.parse(body);
-
-        await prisma.guest.delete({
-            where: {
-                id: data.guestId,
-            },
-        });
+        if (error) {
+            throw error;
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error(error);
+
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                {
+                    message: error.issues
+                        .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+                        .join('; '),
+                },
+                { status: 400 },
+            );
+        }
 
         return NextResponse.json(
             { message: 'Не удалось удалить гостя' },

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
-import { prisma } from '@/src/shared/lib/prisma';
+import { supabaseAdmin } from '@/src/shared/lib/supabaseAdmin';
 import SeatingPlanView from '@/features/seating/SeatingPlanView';
 
 export const dynamic = 'force-dynamic';
@@ -15,38 +15,67 @@ type Props = {
 export default async function GuestSeatingPage({ params }: Props) {
     const { slug } = await params;
 
-    const guest = await prisma.guest.findUnique({
-        where: { slug },
-        include: {
-            seatingAssignment: {
-                include: {
-                    table: true,
-                },
-            },
-        },
-    });
+    const { data: guest, error: guestError } = await supabaseAdmin
+        .from('Guest')
+        .select('*')
+        .eq('slug', slug)
+        .single();
 
-    if (!guest) {
+    if (guestError || !guest) {
         notFound();
     }
 
-    const tables = await prisma.seatingTable.findMany({
-        include: {
-            assignments: {
-                include: {
-                    guest: true,
-                },
-                orderBy: {
-                    guest: {
-                        name: 'asc',
-                    },
-                },
-            },
-        },
-        orderBy: {
-            id: 'asc',
-        },
-    });
+    const { data: seatingAssignment, error: assignmentError } = await supabaseAdmin
+        .from('SeatingAssignment')
+        .select('*, table:SeatingTable(*)')
+        .eq('guestId', guest.id)
+        .maybeSingle();
+
+    if (assignmentError) {
+        console.error(assignmentError);
+    }
+
+    const guestWithAssignment = {
+        ...guest,
+        seatingAssignment: seatingAssignment
+            ? {
+                ...seatingAssignment,
+                table: seatingAssignment.table,
+            }
+            : null,
+    };
+
+    const { data: tablesData, error: tablesError } = await supabaseAdmin
+        .from('SeatingTable')
+        .select('*')
+        .order('id', { ascending: true });
+
+    if (tablesError) {
+        console.error(tablesError);
+    }
+
+    const tables = await Promise.all(
+        (tablesData ?? []).map(async table => {
+            const { data: assignments, error } = await supabaseAdmin
+                .from('SeatingAssignment')
+                .select('*, guest:Guest(*)')
+                .eq('tableId', table.id);
+
+            if (error) {
+                console.error(error);
+            }
+
+            return {
+                ...table,
+                assignments: (assignments ?? []).sort((a, b) =>
+                    String(a.guest?.name ?? '').localeCompare(
+                        String(b.guest?.name ?? ''),
+                        'ru',
+                    ),
+                ),
+            };
+        }),
+    );
 
     return (
         <main className="min-h-screen bg-[#f7eee7] px-4 py-10 text-stone-800">
@@ -61,8 +90,8 @@ export default async function GuestSeatingPage({ params }: Props) {
                     </h1>
 
                     <p className="mx-auto max-w-2xl leading-8 text-stone-600">
-                        {guest.seatingAssignment
-                            ? `Для вас подготовлен ${guest.seatingAssignment.table.name}.`
+                        {guestWithAssignment.seatingAssignment
+                            ? `Для вас подготовлен ${guestWithAssignment.seatingAssignment.table.name}.`
                             : 'Ваше место пока уточняется. Мы обязательно сообщим детали ближе к дате свадьбы.'}
                     </p>
 

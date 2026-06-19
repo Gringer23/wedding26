@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { prisma } from '@/src/shared/lib/prisma';
+import { supabaseAdmin } from '@/src/shared/lib/supabaseAdmin';
 
 const assignSchema = z.object({
     guestId: z.number(),
@@ -19,33 +19,39 @@ export async function POST(request: Request) {
         const body = await request.json();
         const data = assignSchema.parse(body);
 
-        const guest = await prisma.guest.findUnique({
-            where: { id: data.guestId },
-            select: {
-                id: true,
-                maxPeople: true,
-            },
-        });
+        const { data: guest, error: guestError } = await supabaseAdmin
+            .from('Guest')
+            .select('id, maxPeople')
+            .eq('id', data.guestId)
+            .single();
 
-        const table = await prisma.seatingTable.findUnique({
-            where: { id: data.tableId },
-            include: {
-                assignments: true,
-            },
-        });
-
-        if (!guest) {
+        if (guestError || !guest) {
             return NextResponse.json(
                 { message: 'Гость не найден' },
                 { status: 404 },
             );
         }
 
-        if (!table) {
+        const { data: table, error: tableError } = await supabaseAdmin
+            .from('SeatingTable')
+            .select('*')
+            .eq('id', data.tableId)
+            .single();
+
+        if (tableError || !table) {
             return NextResponse.json(
                 { message: 'Стол не найден' },
                 { status: 404 },
             );
+        }
+
+        const { data: assignments, error: assignmentsError } = await supabaseAdmin
+            .from('SeatingAssignment')
+            .select('*')
+            .eq('tableId', data.tableId);
+
+        if (assignmentsError) {
+            throw assignmentsError;
         }
 
         const peopleCount = Math.min(data.peopleCount, guest.maxPeople);
@@ -58,7 +64,7 @@ export async function POST(request: Request) {
             );
         }
 
-        const conflicts = table.assignments.filter(item => {
+        const conflicts = (assignments ?? []).filter(item => {
             if (item.guestId === data.guestId) return false;
 
             const existingStart = item.seatStart;
@@ -74,26 +80,41 @@ export async function POST(request: Request) {
             );
         }
 
-        const assignment = await prisma.seatingAssignment.upsert({
-            where: {
-                guestId: data.guestId,
-            },
-            update: {
-                tableId: data.tableId,
-                peopleCount,
-                seatStart: data.seatStart,
-            },
-            create: {
-                guestId: data.guestId,
-                tableId: data.tableId,
-                peopleCount,
-                seatStart: data.seatStart,
-            },
-        });
+        const { data: assignment, error } = await supabaseAdmin
+            .from('SeatingAssignment')
+            .upsert(
+                {
+                    guestId: data.guestId,
+                    tableId: data.tableId,
+                    peopleCount,
+                    seatStart: data.seatStart,
+                    updatedAt: new Date().toISOString(),
+                },
+                {
+                    onConflict: 'guestId',
+                },
+            )
+            .select('*')
+            .single();
+
+        if (error) {
+            throw error;
+        }
 
         return NextResponse.json(assignment);
     } catch (error) {
         console.error(error);
+
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                {
+                    message: error.issues
+                        .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+                        .join('; '),
+                },
+                { status: 400 },
+            );
+        }
 
         return NextResponse.json(
             { message: 'Не удалось назначить стол' },
@@ -107,15 +128,29 @@ export async function DELETE(request: Request) {
         const body = await request.json();
         const { guestId } = deleteAssignmentSchema.parse(body);
 
-        await prisma.seatingAssignment.delete({
-            where: {
-                guestId,
-            },
-        });
+        const { error } = await supabaseAdmin
+            .from('SeatingAssignment')
+            .delete()
+            .eq('guestId', guestId);
+
+        if (error) {
+            throw error;
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error(error);
+
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                {
+                    message: error.issues
+                        .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+                        .join('; '),
+                },
+                { status: 400 },
+            );
+        }
 
         return NextResponse.json(
             { message: 'Не удалось убрать гостя из рассадки' },

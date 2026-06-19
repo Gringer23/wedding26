@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { prisma } from '@/src/shared/lib/prisma';
+import { supabaseAdmin } from '@/src/shared/lib/supabaseAdmin';
 
 const createTableSchema = z.object({
     name: z.string().min(1),
@@ -29,19 +29,36 @@ export async function POST(request: Request) {
         const body = await request.json();
         const data = createTableSchema.parse(body);
 
-        const table = await prisma.seatingTable.create({
-            data: {
+        const { data: table, error } = await supabaseAdmin
+            .from('SeatingTable')
+            .insert({
                 name: data.name,
                 type: data.type,
                 seats: data.seats,
                 positionX: data.positionX,
                 positionY: data.positionY,
-            },
-        });
+            })
+            .select('*')
+            .single();
+
+        if (error) {
+            throw error;
+        }
 
         return NextResponse.json(table);
     } catch (error) {
         console.error(error);
+
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                {
+                    message: error.issues
+                        .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+                        .join('; '),
+                },
+                { status: 400 },
+            );
+        }
 
         return NextResponse.json(
             { message: 'Не удалось создать стол' },
@@ -55,23 +72,29 @@ export async function PATCH(request: Request) {
         const body = await request.json();
         const data = updateTableSchema.parse(body);
 
-        const table = await prisma.seatingTable.findUnique({
-            where: {
-                id: data.tableId,
-            },
-            include: {
-                assignments: true,
-            },
-        });
+        const { data: table, error: tableError } = await supabaseAdmin
+            .from('SeatingTable')
+            .select('*')
+            .eq('id', data.tableId)
+            .single();
 
-        if (!table) {
+        if (tableError || !table) {
             return NextResponse.json(
                 { message: 'Стол не найден' },
                 { status: 404 },
             );
         }
 
-        const maxSeatUsed = table.assignments.reduce((max, assignment) => {
+        const { data: assignments, error: assignmentsError } = await supabaseAdmin
+            .from('SeatingAssignment')
+            .select('seatStart, peopleCount')
+            .eq('tableId', data.tableId);
+
+        if (assignmentsError) {
+            throw assignmentsError;
+        }
+
+        const maxSeatUsed = (assignments ?? []).reduce((max, assignment) => {
             const assignmentEnd =
                 assignment.seatStart + assignment.peopleCount - 1;
 
@@ -87,22 +110,38 @@ export async function PATCH(request: Request) {
             );
         }
 
-        const updatedTable = await prisma.seatingTable.update({
-            where: {
-                id: data.tableId,
-            },
-            data: {
+        const { data: updatedTable, error } = await supabaseAdmin
+            .from('SeatingTable')
+            .update({
                 name: data.name,
                 type: data.type,
                 seats: data.seats,
                 positionX: data.positionX,
                 positionY: data.positionY,
-            },
-        });
+                updatedAt: new Date().toISOString(),
+            })
+            .eq('id', data.tableId)
+            .select('*')
+            .single();
+
+        if (error) {
+            throw error;
+        }
 
         return NextResponse.json(updatedTable);
     } catch (error) {
         console.error(error);
+
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                {
+                    message: error.issues
+                        .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+                        .join('; '),
+                },
+                { status: 400 },
+            );
+        }
 
         return NextResponse.json(
             { message: 'Не удалось обновить стол' },
@@ -116,15 +155,29 @@ export async function DELETE(request: Request) {
         const body = await request.json();
         const { tableId } = deleteTableSchema.parse(body);
 
-        await prisma.seatingTable.delete({
-            where: {
-                id: tableId,
-            },
-        });
+        const { error } = await supabaseAdmin
+            .from('SeatingTable')
+            .delete()
+            .eq('id', tableId);
+
+        if (error) {
+            throw error;
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error(error);
+
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                {
+                    message: error.issues
+                        .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+                        .join('; '),
+                },
+                { status: 400 },
+            );
+        }
 
         return NextResponse.json(
             { message: 'Не удалось удалить стол' },

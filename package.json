@@ -4,24 +4,26 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
-    "lint": "eslint",
-    "postinstall": "prisma generate",
-    "migrate": "prisma migrate deploy"
+    "build": "opennextjs-cloudflare build",
+    "next:build": "next build",
+    "preview": "opennextjs-cloudflare build && wrangler dev",
+    "deploy": "opennextjs-cloudflare build && wrangler deploy",
+    "lint": "eslint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@opennextjs/cloudflare": "^1.19.11",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@supabase/supabase-js": "^2.108.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "motion": "^12.38.0",
-    "next": "16.2.4",
+    "next": "^16.2.6",
     "pg": "^8.20.0",
     "prisma": "^7.8.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-hook-form": "^7.74.0",
     "react-zoom-pan-pinch": "^4.0.3",
     "zod": "^4.4.1"
@@ -37,6 +39,7 @@
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.102.0"
   }
 }
