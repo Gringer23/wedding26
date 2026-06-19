@@ -3,6 +3,8 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.idea/inspectionProfiles" />
+      <excludeFolder url="file://$MODULE_DIR$/.open-next/middleware/assets" />
+      <excludeFolder url="file://$MODULE_DIR$/.open-next/middleware/wasm" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

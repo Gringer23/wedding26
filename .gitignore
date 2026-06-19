@@ -40,16 +40,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/.idea/
-
-.open-next
-.wrangler
-.dev.vars
-
+.idea/
+.wrangler/
+.open-next/
 .env
 .env.local
 .env.production
 .env.production.local
+.dev.vars
 
 /src/generated/prisma
 /.open-next/
