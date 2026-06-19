@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import { useRouter } from 'next/navigation';
 
 type AttendanceStatus = 'WILL_COME' | 'WILL_NOT_COME';
@@ -39,8 +39,12 @@ export default function AdminGuests({ guests }: Props) {
     const [createdLink, setCreatedLink] = useState<string | null>(null);
     const [search, setSearch] = useState('');
 
-    const origin =
-        typeof window !== 'undefined' ? window.location.origin : '';
+    const [origin, setOrigin] = useState('');
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setOrigin(window.location.origin);
+    }, []);
 
     const filteredGuests = useMemo(() => {
         const normalizedSearch = search.trim().toLowerCase();
@@ -110,7 +114,7 @@ export default function AdminGuests({ guests }: Props) {
             }
 
             const guest = (await response.json()) as Guest;
-            const link = `${origin}/i/${guest.slug}`;
+            const link = `${window.location.origin}/i/${guest.slug}`;
 
             setCreatedLink(link);
             setName('');
@@ -155,7 +159,7 @@ export default function AdminGuests({ guests }: Props) {
     };
 
     const copyLink = async (slug: string) => {
-        const link = `${origin}/i/${slug}`;
+        const link = `${window.location.origin}/i/${slug}`;
 
         await navigator.clipboard.writeText(link);
 
@@ -286,7 +290,8 @@ export default function AdminGuests({ guests }: Props) {
 
                         <tbody>
                         {filteredGuests.map(guest => {
-                            const link = `${origin}/i/${guest.slug}`;
+                            const visibleLink = `/i/${guest.slug}`;
+                            const fullLink = origin ? `${origin}/i/${guest.slug}` : visibleLink;
                             const drinks = parseDrinks(guest.response?.drinks);
 
                             return (
@@ -307,7 +312,7 @@ export default function AdminGuests({ guests }: Props) {
 
                                     <td className="py-4 pr-4">
                                         <code className="block max-w-[260px] truncate rounded-lg bg-stone-50 px-3 py-2 text-sm text-stone-600">
-                                            {link}
+                                            {visibleLink}
                                         </code>
                                     </td>
 

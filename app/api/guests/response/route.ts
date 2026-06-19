@@ -5,7 +5,7 @@ import { prisma } from '@/src/shared/lib/prisma';
 const responseSchema = z.object({
     guestId: z.number(),
     status: z.enum(['WILL_COME', 'WILL_NOT_COME']),
-    peopleCount: z.number().optional(),
+    peopleCount: z.coerce.number().min(1).max(20).optional(),
     drinks: z.array(z.string()).optional(),
     comment: z.string().optional(),
 });
@@ -33,27 +33,22 @@ export async function POST(request: Request) {
                 ? Math.min(data.peopleCount ?? 1, guest.maxPeople)
                 : null;
 
-        const drinks =
-            data.status === 'WILL_COME'
-                ? JSON.stringify(data.drinks ?? [])
-                : null;
-
         const response = await prisma.guestResponse.upsert({
             where: {
-                guestId: data.guestId,
+                guestId: guest.id,
+            },
+            create: {
+                guestId: guest.id,
+                status: data.status,
+                peopleCount,
+                drinks: JSON.stringify(data.drinks ?? []),
+                comment: data.comment?.trim() || null,
             },
             update: {
                 status: data.status,
                 peopleCount,
-                drinks,
-                comment: data.comment ?? null,
-            },
-            create: {
-                guestId: data.guestId,
-                status: data.status,
-                peopleCount,
-                drinks,
-                comment: data.comment ?? null,
+                drinks: JSON.stringify(data.drinks ?? []),
+                comment: data.comment?.trim() || null,
             },
         });
 
@@ -61,8 +56,19 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error(error);
 
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                {
+                    message: error.issues
+                        .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+                        .join('; '),
+                },
+                { status: 400 },
+            );
+        }
+
         return NextResponse.json(
-            { message: 'Ошибка сохранения ответа' },
+            { message: 'Не удалось сохранить ответ' },
             { status: 400 },
         );
     }
