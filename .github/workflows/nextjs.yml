@@ -72,9 +72,9 @@ jobs:
           command: |
             cd /home/deploy/nextjs
             
-            npm run build --verbose  { echo 'Build failed, skipping PM2 restart'; exit 1; }
+            npm run build --verbose || { echo 'Build failed, skipping PM2 restart'; exit 1; }
             
-            pm2 delete nextjs-app  true
+            pm2 delete nextjs-app || true
             PORT=3000 pm2 start npm --name "nextjs-app" -- start
             pm2 save
             pm2 restart nextjs-app --update-env
