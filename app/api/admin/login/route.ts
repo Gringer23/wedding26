@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
         if (!adminPassword) {
             return NextResponse.json(
-                { message: 'ADMIN_PASSWORD не задан в .env' },
+                { message: 'ADMIN_PASSWORD не задан' },
                 { status: 500 },
             );
         }
@@ -28,10 +28,14 @@ export async function POST(request: Request) {
 
         const response = NextResponse.json({ success: true });
 
+        const isHttps =
+            request.headers.get('x-forwarded-proto') === 'https' ||
+            new URL(request.url).protocol === 'https:';
+
         response.cookies.set('admin_auth', 'true', {
             httpOnly: true,
             sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
+            secure: isHttps,
             path: '/',
             maxAge: 60 * 60 * 24 * 7,
         });
