@@ -1,0 +1,83 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Archive project
+        run: |
+          zip -r project.zip ./*
+
+      - name: Copy archive to remote server
+        uses: appleboy/scp-action@v0.1.0
+        with:
+          host: ${{ secrets.TEST_HOST }}
+          username: ${{ secrets.TEST_SSH_USER }}
+          password: ${{ secrets.TEST_PASSWORD }}
+          source: 'project.zip'
+          target: '/home/deploy/nextjs/'
+          overwrite: true
+
+      - name: Unzip archive on remote server
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: |
+            apt-get update
+            apt-get install -y unzip
+            rm -rf /home/deploy/nextjs/src
+            unzip -o /home/deploy/nextjs/project.zip -d /home/deploy/nextjs/
+            rm /home/deploy/nextjs/project.zip
+          host: ${{ secrets.TEST_HOST }}
+          username: ${{ secrets.TEST_SSH_USER }}
+          password: ${{ secrets.TEST_PASSWORD }}
+
+      - name: Install Node.js 24 and dependencies on remote server
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: |
+            NODE_VERSION=$(node -v 2>/dev/null || echo "none")
+            echo "Detected node version: $NODE_VERSION"
+
+            if [[ "$NODE_VERSION" != v24* ]]; then
+              echo "Installing Node.js 24..."
+              curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+              apt-get install -y nodejs
+            else
+              echo "Node.js 24 already installed."
+            fi
+
+            cd /home/deploy/nextjs
+            npm install --force
+          host: ${{ secrets.TEST_HOST }}
+          username: ${{ secrets.TEST_SSH_USER }}
+          password: ${{ secrets.TEST_PASSWORD }}
+
+      - name: Build and start application using PM2 on remote server
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: |
+            cd /home/deploy/nextjs
+            npm run build --verbose || { echo 'Build failed, skipping PM2 restart'; exit 1; }
+            npm install -g pm2
+            pm2 delete nextjs-app || true
+            pm2 start npm --name "nextjs-app" -- start
+            pm2 startup
+            pm2 save
+            pm2 restart nextjs-app --update-env
+          host: ${{ secrets.TEST_HOST }}
+          username: ${{ secrets.TEST_SSH_USER }}
+          password: ${{ secrets.TEST_PASSWORD }}
