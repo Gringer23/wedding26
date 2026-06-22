@@ -72,6 +72,10 @@ export default function AdminGuests({ guests }: Props) {
             guest => guest.response?.status === 'WILL_NOT_COME',
         ).length;
 
+        const totalInvitedPeople = guests.reduce((sum, guest) => {
+            return sum + guest.maxPeople;
+        }, 0);
+
         const totalPeople = guests.reduce((sum, guest) => {
             if (guest.response?.status !== 'WILL_COME') {
                 return sum;
@@ -85,6 +89,7 @@ export default function AdminGuests({ guests }: Props) {
             answeredCount,
             willComeCount,
             willNotComeCount,
+            totalInvitedPeople,
             totalPeople,
         };
     }, [guests]);
@@ -176,12 +181,13 @@ export default function AdminGuests({ guests }: Props) {
 
     return (
         <div className="space-y-8">
-            <section className="grid gap-4 md:grid-cols-5">
+            <section className="grid gap-4 md:grid-cols-6">
                 <StatCard title="Всего гостей" value={stats.totalGuests} />
+                <StatCard title="Всего человек" value={stats.totalInvitedPeople} />
                 <StatCard title="Ответили" value={stats.answeredCount} />
                 <StatCard title="Придут" value={stats.willComeCount} />
                 <StatCard title="Не придут" value={stats.willNotComeCount} />
-                <StatCard title="Всего человек" value={stats.totalPeople} />
+                <StatCard title="Подтвердили чел." value={stats.totalPeople} />
             </section>
 
             <section className="rounded-[32px] bg-white p-6 shadow-sm border border-stone-100">
