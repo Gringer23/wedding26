@@ -3,12 +3,14 @@ import { z } from 'zod';
 
 import { supabaseAdmin } from '@/src/shared/lib/supabaseAdmin';
 
+const MAX_COORDINATE = 5000;
+
 const createTableSchema = z.object({
     name: z.string().min(1),
     type: z.enum(['ROUND', 'PRESIDIUM']),
     seats: z.coerce.number().min(1).max(50),
-    positionX: z.coerce.number().min(0).max(1000),
-    positionY: z.coerce.number().min(0).max(1000),
+    positionX: z.coerce.number().min(0).max(MAX_COORDINATE),
+    positionY: z.coerce.number().min(0).max(MAX_COORDINATE),
 });
 
 const updateTableSchema = z.object({
@@ -16,8 +18,8 @@ const updateTableSchema = z.object({
     name: z.string().min(1),
     type: z.enum(['ROUND', 'PRESIDIUM']),
     seats: z.coerce.number().min(1).max(50),
-    positionX: z.coerce.number().min(0).max(1000),
-    positionY: z.coerce.number().min(0).max(1000),
+    positionX: z.coerce.number().min(0).max(MAX_COORDINATE),
+    positionY: z.coerce.number().min(0).max(MAX_COORDINATE),
 });
 
 const deleteTableSchema = z.object({

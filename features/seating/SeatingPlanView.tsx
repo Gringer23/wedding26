@@ -39,6 +39,18 @@ type SeatItem = {
     isActive: boolean;
 };
 
+const COORDINATE_SIZE = 5000;
+const PLAN_SIZE = 1000;
+const COORDINATE_TO_PIXEL_RATIO = PLAN_SIZE / COORDINATE_SIZE;
+
+const INITIAL_SCALE = 0.7;
+const MIN_SCALE = 0.35;
+const MAX_SCALE = 1.8;
+
+function coordinateToPixel(value: number) {
+    return value * COORDINATE_TO_PIXEL_RATIO;
+}
+
 export default function SeatingPlanView({ tables, activeGuestId }: Props) {
     if (!tables.length) {
         return (
@@ -74,9 +86,9 @@ export default function SeatingPlanView({ tables, activeGuestId }: Props) {
                 </div>
 
                 <TransformWrapper
-                    initialScale={0.45}
-                    minScale={0.2}
-                    maxScale={1.2}
+                    initialScale={INITIAL_SCALE}
+                    minScale={MIN_SCALE}
+                    maxScale={MAX_SCALE}
                     centerOnInit
                     centerZoomedOut
                     wheel={{
@@ -178,8 +190,8 @@ function TableNode({
         <div
             className="absolute -translate-x-1/2 -translate-y-1/2"
             style={{
-                left: `${table.positionX}px`,
-                top: `${table.positionY}px`,
+                left: `${coordinateToPixel(table.positionX)}px`,
+                top: `${coordinateToPixel(table.positionY)}px`,
             }}
         >
             {table.type === 'PRESIDIUM' ? (

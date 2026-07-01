@@ -34,6 +34,8 @@ type Props = {
     tables: SeatingTable[];
 };
 
+export const MAX_COORDINATE = 5000;
+
 export default function AdminSeating({ guests, tables }: Props) {
     const router = useRouter();
     const [seatStart, setSeatStart] = useState(1);
@@ -267,7 +269,7 @@ export default function AdminSeating({ guests, tables }: Props) {
                         <input
                             type="number"
                             min={0}
-                            max={1000}
+                            max={MAX_COORDINATE}
                             value={positionX}
                             onChange={event => setPositionX(Number(event.target.value))}
                             className="w-full rounded-2xl border border-stone-200 px-4 py-3 text-center outline-none focus:border-stone-700"
@@ -281,7 +283,7 @@ export default function AdminSeating({ guests, tables }: Props) {
                         <input
                             type="number"
                             min={0}
-                            max={1000}
+                            max={MAX_COORDINATE}
                             value={positionY}
                             onChange={event => setPositionY(Number(event.target.value))}
                             className="w-full rounded-2xl border border-stone-200 px-4 py-3 text-center outline-none focus:border-stone-700"
@@ -384,8 +386,8 @@ export default function AdminSeating({ guests, tables }: Props) {
                     Как работают координаты:
                 </p>
                 <p>
-                    X — положение по горизонтали от 0 до 1000. Y — положение по вертикали от 0 до 1000.
-                    Например, президиум удобно ставить X=500, Y=120. Центральный стол — X=500, Y=500.
+                    X — положение по горизонтали от 0 до {MAX_COORDINATE}. Y — положение по вертикали от 0 до {MAX_COORDINATE}.
+                    Например, президиум удобно ставить X=2500, Y=600. Центральный стол — X=2500, Y=2500.
                 </p>
             </div>
             <div className="grid gap-5 lg:grid-cols-2">
@@ -453,7 +455,7 @@ export default function AdminSeating({ guests, tables }: Props) {
                                             <input
                                                 type="number"
                                                 min={0}
-                                                max={1000}
+                                                max={MAX_COORDINATE}
                                                 value={editPositionX}
                                                 onChange={event => setEditPositionX(Number(event.target.value))}
                                                 className="w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-stone-700"
@@ -467,7 +469,7 @@ export default function AdminSeating({ guests, tables }: Props) {
                                             <input
                                                 type="number"
                                                 min={0}
-                                                max={1000}
+                                                max={MAX_COORDINATE}
                                                 value={editPositionY}
                                                 onChange={event => setEditPositionY(Number(event.target.value))}
                                                 className="w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-stone-700"
