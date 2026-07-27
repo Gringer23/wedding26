@@ -11,7 +11,7 @@ const assignSchema = z.object({
 });
 
 const deleteAssignmentSchema = z.object({
-    guestId: z.number(),
+    assignmentId: z.number(),
 });
 
 export async function POST(request: Request) {
@@ -45,17 +45,50 @@ export async function POST(request: Request) {
             );
         }
 
-        const { data: assignments, error: assignmentsError } = await supabaseAdmin
-            .from('SeatingAssignment')
-            .select('*')
-            .eq('tableId', data.tableId);
+        const { data: tableAssignments, error: tableAssignmentsError } =
+            await supabaseAdmin
+                .from('SeatingAssignment')
+                .select('*')
+                .eq('tableId', data.tableId);
 
-        if (assignmentsError) {
-            throw assignmentsError;
+        if (tableAssignmentsError) {
+            throw tableAssignmentsError;
         }
 
-        const peopleCount = Math.min(data.peopleCount, guest.maxPeople);
-        const seatEnd = data.seatStart + peopleCount - 1;
+        const { data: guestAssignments, error: guestAssignmentsError } =
+            await supabaseAdmin
+                .from('SeatingAssignment')
+                .select('*')
+                .eq('guestId', data.guestId);
+
+        if (guestAssignmentsError) {
+            throw guestAssignmentsError;
+        }
+
+        const alreadyAssignedPeople = (guestAssignments ?? []).reduce(
+            (sum, assignment) => sum + assignment.peopleCount,
+            0,
+        );
+
+        const remainingPeople = guest.maxPeople - alreadyAssignedPeople;
+
+        if (remainingPeople <= 0) {
+            return NextResponse.json(
+                { message: 'Этот гость/семья уже полностью рассажен(а)' },
+                { status: 400 },
+            );
+        }
+
+        if (data.peopleCount > remainingPeople) {
+            return NextResponse.json(
+                {
+                    message: `Можно рассадить ещё только ${remainingPeople} чел. из этой семьи`,
+                },
+                { status: 400 },
+            );
+        }
+
+        const seatEnd = data.seatStart + data.peopleCount - 1;
 
         if (seatEnd > table.seats) {
             return NextResponse.json(
@@ -64,9 +97,7 @@ export async function POST(request: Request) {
             );
         }
 
-        const conflicts = (assignments ?? []).filter(item => {
-            if (item.guestId === data.guestId) return false;
-
+        const conflicts = (tableAssignments ?? []).filter(item => {
             const existingStart = item.seatStart;
             const existingEnd = item.seatStart + item.peopleCount - 1;
 
@@ -82,18 +113,12 @@ export async function POST(request: Request) {
 
         const { data: assignment, error } = await supabaseAdmin
             .from('SeatingAssignment')
-            .upsert(
-                {
-                    guestId: data.guestId,
-                    tableId: data.tableId,
-                    peopleCount,
-                    seatStart: data.seatStart,
-                    updatedAt: new Date().toISOString(),
-                },
-                {
-                    onConflict: 'guestId',
-                },
-            )
+            .insert({
+                guestId: data.guestId,
+                tableId: data.tableId,
+                peopleCount: data.peopleCount,
+                seatStart: data.seatStart,
+            })
             .select('*')
             .single();
 
@@ -126,12 +151,12 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
     try {
         const body = await request.json();
-        const { guestId } = deleteAssignmentSchema.parse(body);
+        const { assignmentId } = deleteAssignmentSchema.parse(body);
 
         const { error } = await supabaseAdmin
             .from('SeatingAssignment')
             .delete()
-            .eq('guestId', guestId);
+            .eq('id', assignmentId);
 
         if (error) {
             throw error;

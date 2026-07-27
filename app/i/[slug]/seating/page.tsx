@@ -25,25 +25,18 @@ export default async function GuestSeatingPage({ params }: Props) {
         notFound();
     }
 
-    const { data: seatingAssignment, error: assignmentError } = await supabaseAdmin
+    const { data: seatingAssignments, error: assignmentError } = await supabaseAdmin
         .from('SeatingAssignment')
         .select('*, table:SeatingTable(*)')
-        .eq('guestId', guest.id)
-        .maybeSingle();
+        .eq('guestId', guest.id);
 
     if (assignmentError) {
         console.error(assignmentError);
     }
 
-    const guestWithAssignment = {
-        ...guest,
-        seatingAssignment: seatingAssignment
-            ? {
-                ...seatingAssignment,
-                table: seatingAssignment.table,
-            }
-            : null,
-    };
+    const guestTables = (seatingAssignments ?? [])
+        .map(assignment => assignment.table?.name)
+        .filter(Boolean);
 
     const { data: tablesData, error: tablesError } = await supabaseAdmin
         .from('SeatingTable')
@@ -90,8 +83,8 @@ export default async function GuestSeatingPage({ params }: Props) {
                     </h1>
 
                     <p className="mx-auto max-w-2xl leading-8 text-stone-600">
-                        {guestWithAssignment.seatingAssignment
-                            ? `Для вас подготовлен ${guestWithAssignment.seatingAssignment.table.name}.`
+                        {guestTables.length
+                            ? `Для вас подготовлены места: ${guestTables.join(', ')}.`
                             : 'Ваше место пока уточняется. Мы обязательно сообщим детали ближе к дате свадьбы.'}
                     </p>
 

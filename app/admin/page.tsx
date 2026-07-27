@@ -27,21 +27,9 @@ export default async function AdminPage() {
                 console.error(responseError);
             }
 
-            const { data: seatingAssignment, error: assignmentError } =
-                await supabaseAdmin
-                    .from('SeatingAssignment')
-                    .select('*')
-                    .eq('guestId', guest.id)
-                    .maybeSingle();
-
-            if (assignmentError) {
-                console.error(assignmentError);
-            }
-
             return {
                 ...guest,
                 response: response ?? null,
-                seatingAssignment: seatingAssignment ?? null,
             };
         }),
     );

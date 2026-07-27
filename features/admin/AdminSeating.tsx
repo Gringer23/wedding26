@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 type Guest = {
@@ -56,6 +56,52 @@ export default function AdminSeating({ guests, tables }: Props) {
     const [editSeats, setEditSeats] = useState(8);
     const [editPositionX, setEditPositionX] = useState(500);
     const [editPositionY, setEditPositionY] = useState(500);
+
+    const guestAssignmentStats = useMemo(() => {
+        const stats = new Map<number, { assigned: number; remaining: number }>();
+
+        for (const guest of guests) {
+            stats.set(guest.id, {
+                assigned: 0,
+                remaining: guest.maxPeople,
+            });
+        }
+
+        for (const table of tables) {
+            for (const assignment of table.assignments) {
+                const guest = guests.find(item => item.id === assignment.guestId);
+
+                if (!guest) {
+                    continue;
+                }
+
+                const current = stats.get(guest.id) ?? {
+                    assigned: 0,
+                    remaining: guest.maxPeople,
+                };
+
+                const assigned = current.assigned + assignment.peopleCount;
+
+                stats.set(guest.id, {
+                    assigned,
+                    remaining: Math.max(guest.maxPeople - assigned, 0),
+                });
+            }
+        }
+
+        return stats;
+    }, [guests, tables]);
+
+    const selectedGuest = guestId
+        ? guests.find(guest => guest.id === guestId) ?? null
+        : null;
+
+    const selectedGuestStats = selectedGuest
+        ? guestAssignmentStats.get(selectedGuest.id) ?? {
+            assigned: 0,
+            remaining: selectedGuest.maxPeople,
+        }
+        : null;
 
     const createTable = async () => {
         if (!tableName.trim()) return;
@@ -163,6 +209,11 @@ export default function AdminSeating({ guests, tables }: Props) {
     const assignGuest = async () => {
         if (!guestId || !tableId) return;
 
+        if (selectedGuestStats && peopleCount > selectedGuestStats.remaining) {
+            alert(`Можно рассадить ещё только ${selectedGuestStats.remaining} чел. из этой семьи`);
+            return;
+        }
+
         const response = await fetch('/api/admin/seating/assignments', {
             method: 'POST',
             headers: {
@@ -177,7 +228,8 @@ export default function AdminSeating({ guests, tables }: Props) {
         });
 
         if (!response.ok) {
-            alert('Не удалось назначить гостя');
+            const data = await response.json().catch(() => null);
+            alert(data?.message ?? 'Не удалось назначить гостя');
             return;
         }
 
@@ -188,14 +240,14 @@ export default function AdminSeating({ guests, tables }: Props) {
         router.refresh();
     };
 
-    const removeAssignment = async (id: number) => {
+    const removeAssignment = async (assignmentId: number) => {
         const response = await fetch('/api/admin/seating/assignments', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                guestId: id,
+                assignmentId,
             }),
         });
 
@@ -214,8 +266,8 @@ export default function AdminSeating({ guests, tables }: Props) {
                     План рассадки
                 </h2>
                 <p className="mt-1 text-stone-500">
-                    Добавляйте столы и назначайте гостей. На персональной странице гостя
-                    его стол будет подсвечен.
+                    Добавляйте столы и назначайте гостей. Одну большую семью теперь можно
+                    разделить на несколько столов — добавляйте несколько назначений для одного гостя.
                 </p>
             </div>
 
@@ -311,17 +363,26 @@ export default function AdminSeating({ guests, tables }: Props) {
                             const id = Number(event.target.value);
                             const guest = guests.find(item => item.id === id);
 
+                            const stats = id ? guestAssignmentStats.get(id) : null;
+
                             setGuestId(id || '');
-                            setPeopleCount(guest?.maxPeople ?? 1);
+                            setPeopleCount(Math.max(stats?.remaining ?? guest?.maxPeople ?? 1, 1));
                         }}
                         className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none focus:border-stone-700"
                     >
                         <option value="">Выберите гостя</option>
-                        {guests.map(guest => (
-                            <option key={guest.id} value={guest.id}>
-                                {guest.name}
-                            </option>
-                        ))}
+                        {guests.map(guest => {
+                            const stats = guestAssignmentStats.get(guest.id);
+                            const assigned = stats?.assigned ?? 0;
+                            const remaining = stats?.remaining ?? guest.maxPeople;
+
+                            return (
+                                <option key={guest.id} value={guest.id}>
+                                    {guest.name} — свободно {remaining} из {guest.maxPeople}
+                                    {assigned ? `, уже рассажено ${assigned}` : ''}
+                                </option>
+                            );
+                        })}
                     </select>
                 </div>
 
@@ -350,11 +411,17 @@ export default function AdminSeating({ guests, tables }: Props) {
                     <input
                         type="number"
                         min={1}
-                        max={50}
+                        max={Math.max(selectedGuestStats?.remaining ?? 50, 1)}
                         value={peopleCount}
                         onChange={event => setPeopleCount(Number(event.target.value))}
                         className="w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-stone-700"
                     />
+
+                    {selectedGuestStats && (
+                        <p className="mt-2 text-xs text-stone-500">
+                            Уже рассажено: {selectedGuestStats.assigned} из {selectedGuest?.maxPeople ?? 0}. Можно добавить ещё: {selectedGuestStats.remaining}.
+                        </p>
+                    )}
                 </div>
 
                 <div>
@@ -375,7 +442,8 @@ export default function AdminSeating({ guests, tables }: Props) {
                     <button
                         type="button"
                         onClick={assignGuest}
-                        className="w-full rounded-2xl bg-stone-900 px-5 py-3 text-white transition hover:bg-stone-700"
+                        disabled={!guestId || !tableId || selectedGuestStats?.remaining === 0}
+                        className="w-full rounded-2xl bg-stone-900 px-5 py-3 text-white transition hover:bg-stone-700 disabled:opacity-50"
                     >
                         Назначить
                     </button>
@@ -557,7 +625,7 @@ export default function AdminSeating({ guests, tables }: Props) {
 
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeAssignment(assignment.guestId)}
+                                                        onClick={() => removeAssignment(assignment.id)}
                                                         className="rounded-xl bg-stone-100 px-4 py-2 text-sm text-stone-700 transition hover:bg-stone-200"
                                                     >
                                                         Убрать
