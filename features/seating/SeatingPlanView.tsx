@@ -1,7 +1,7 @@
 'use client';
 
-import {TransformComponent, TransformWrapper} from "react-zoom-pan-pinch";
-
+import { useEffect, useState } from 'react';
+import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 type Guest = {
     id: number;
     name: string;
@@ -43,8 +43,12 @@ const COORDINATE_SIZE = 5000;
 const PLAN_SIZE = 1000;
 const COORDINATE_TO_PIXEL_RATIO = PLAN_SIZE / COORDINATE_SIZE;
 
-const INITIAL_SCALE = 0.7;
-const MIN_SCALE = 0.35;
+const DESKTOP_INITIAL_SCALE = 0.7;
+const MOBILE_INITIAL_SCALE = 0.34;
+
+const DESKTOP_MIN_SCALE = 0.35;
+const MOBILE_MIN_SCALE = 0.28;
+
 const MAX_SCALE = 1.8;
 
 function coordinateToPixel(value: number) {
@@ -52,6 +56,25 @@ function coordinateToPixel(value: number) {
 }
 
 export default function SeatingPlanView({ tables, activeGuestId }: Props) {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const updateIsMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        updateIsMobile();
+
+        window.addEventListener('resize', updateIsMobile);
+
+        return () => {
+            window.removeEventListener('resize', updateIsMobile);
+        };
+    }, []);
+
+    const initialScale = isMobile ? MOBILE_INITIAL_SCALE : DESKTOP_INITIAL_SCALE;
+    const minScale = isMobile ? MOBILE_MIN_SCALE : DESKTOP_MIN_SCALE;
+
     if (!tables.length) {
         return (
             <div className="rounded-[32px] border border-stone-100 bg-white/80 p-10 text-center shadow-sm">
@@ -86,8 +109,9 @@ export default function SeatingPlanView({ tables, activeGuestId }: Props) {
                 </div>
 
                 <TransformWrapper
-                    initialScale={INITIAL_SCALE}
-                    minScale={MIN_SCALE}
+                    key={isMobile ? 'mobile' : 'desktop'}
+                    initialScale={initialScale}
+                    minScale={minScale}
                     maxScale={MAX_SCALE}
                     centerOnInit
                     centerZoomedOut
@@ -138,7 +162,7 @@ export default function SeatingPlanView({ tables, activeGuestId }: Props) {
                                 </div>
                             </div>
 
-                            <div className="h-[620px] overflow-hidden rounded-[28px] border border-stone-100 bg-[#f9f4ee] md:h-[780px]">
+                            <div className="aspect-square max-h-[780px] overflow-hidden rounded-[28px] border border-stone-100 bg-[#f9f4ee] md:h-[780px] md:aspect-auto">
                                 <TransformComponent
                                     wrapperClass="!h-full !w-full"
                                     contentClass="!h-[1000px] !w-[1000px]"
